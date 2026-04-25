@@ -3,22 +3,22 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import streamlit as st
 
-# --Page config
+# Page config
 st.set_page_config(
     page_title="PN Junction – Thermal Failure Sim",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-# --Constants------------------------------------------------------------------------
-Eg0   = 1.17          # Silicon band gap at 0 K (eV)
+# Constants
+Eg0   = 1.17          
 alpha = 4.73e-4       # Varshni coefficient (eV/K)
 beta  = 636           # Varshni coefficient (K)
-kB    = 8.617e-5      # Boltzmann constant (eV/K)
-ni300 = 1.5e10        # Intrinsic carrier concentration at 300 K (cm-3)
+kB    = 8.617e-5     
+ni300 = 1.5e10        
 T300  = 300.0
 
-# -- Physics functions ---------------------------------------------------------------
+# Physics functions
 def band_gap(T):
     return Eg0 - (alpha * T**2) / (T + beta)
 
@@ -33,7 +33,7 @@ def failure_temp(Na):
     idx = np.argmin(np.abs(ni_vals - Na))
     return T_range[idx]
 
-# -- Sidebar controls --------------------------------------------------------------
+# Sidebar controls 
 with st.sidebar:
     st.title("Parameters")
 
@@ -87,7 +87,7 @@ st.markdown(f"**Junction status:** :{status_color}[{status}]")
 c1, c2, c3, c4 = st.columns(4)
 c1.metric("Temperature",         f"{T:.0f} K")
 c2.metric("Band gap Eₘ",        f"{Eg_now:.3f} eV",
-          delta=f"{Eg_now - band_gap(300):.3f} eV vs 300K")
+          delta=f"{(Eg_now - band_gap(300)):.3f} eV vs 300K")
 c3.metric("nᵢ / Nₐ ratio",     f"{ratio:.2e}",
           help="Approaches 1 as the junction fails")
 c4.metric("Thermal failure at",  f"{T_fail:.0f} K",
@@ -95,7 +95,7 @@ c4.metric("Thermal failure at",  f"{T_fail:.0f} K",
 
 st.markdown("---")
 
-# -- Build T-axis arrays ----------------------------------------------------------
+#t axis arrays
 T_arr    = np.linspace(200, 800, 600)
 ni_arr   = ni(T_arr)
 Eg_arr   = band_gap(T_arr)
@@ -119,7 +119,7 @@ fig = make_subplots(
     horizontal_spacing=0.12,
 )
 
-# --Plot 1: nᵢ vs T ---------------------------------------------------------------
+# Plot 1: nᵢ vs T 
 # Full curve (faded)
 fig.add_trace(go.Scatter(
     x=T_arr, y=ni_arr,
@@ -147,7 +147,7 @@ fig.add_hline(
     row=1, col=1,
 )
 
-# Current point
+
 fig.add_trace(go.Scatter(
     x=[T], y=[ni_now],
     mode="markers",
@@ -156,7 +156,8 @@ fig.add_trace(go.Scatter(
     hovertemplate=f"T={T:.0f}K<br>nᵢ={ni_now:.2e} cm⁻³<extra></extra>",
 ), row=1, col=1)
 
-# Failure temperature line
+
+
 if 200 <= T_fail <= 800:
     fig.add_vline(
         x=T_fail, line_dash="dot", line_color="tomato", line_width=1.5,
@@ -168,7 +169,7 @@ if 200 <= T_fail <= 800:
 fig.update_yaxes(type="log", title_text="nᵢ (cm⁻³)", row=1, col=1)
 fig.update_xaxes(title_text="Temperature (K)", row=1, col=1)
 
-# --Plot 2: ratio ni/Na vs T---------------------------------------------------
+#Plot 2: ratio ni/Na vs T
 # Background danger zones
 fig.add_hrect(y0=0,    y1=0.01,  fillcolor="rgba(0,200,100,0.08)",  line_width=0, row=1, col=2)
 fig.add_hrect(y0=0.01, y1=0.1,   fillcolor="rgba(255,200,0,0.08)",  line_width=0, row=1, col=2)
@@ -222,8 +223,6 @@ fig.update_xaxes(showgrid=True, gridcolor="rgba(128,128,128,0.15)")
 fig.update_yaxes(showgrid=True, gridcolor="rgba(128,128,128,0.15)")
 
 st.plotly_chart(fig, use_container_width=True)
-
-# -- Band gap sub-plot -----------------------------------------------
 with st.expander("Band gap Eₘ vs Temperature"):
     fig2 = go.Figure()
     fig2.add_trace(go.Scatter(
